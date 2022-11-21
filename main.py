@@ -15,7 +15,7 @@ class DatabaseManager:
             'authors': [<str>,],
             'abstract': <str>,
             'venue': <str>,
-            'year': <int>}
+            'year': <int>}1
         """
 
     def search_authors(self, keyword: str) -> list[list[str, int]]:
@@ -23,14 +23,21 @@ class DatabaseManager:
         Returns all authors whose name includes the provided keyword.
         in form [[<author1>,<publications>],]
         """
+        assert(len(keyword) > 0)
+        assert(isinstance(keyword, str))
 
-    def top_venues(self):
+    def top_venues(self, n: int):
         """
-        
+        Returns the top n venues, based on the number of articles that reference the venue.
+        The return will be a list of dictionaries in the format:
+            [[<venue1>, <BiggestArticleCount>], [<venue2>, <SmallerArticelCount>]]
         """
+        assert(n > 0)
+        assert(isinstance(n, int))
 
-    def add_article(self):
+    def add_article(self, identifier: str, title: str, authors: list[str], year: int):
         """
+        Adds an article to the mongo database.
         """
 
 class Interface:
