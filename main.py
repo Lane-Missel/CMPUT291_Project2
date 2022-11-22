@@ -1,13 +1,14 @@
 from pymongo import MongoClient
 import sys
+from typing import List,Dict
 
 class DatabaseManager:
 
     def __init__(self, port: int):
-        self.client = MongoClient("localhost://")
-        self.collection = self.client["dblp"]
+        self.client = MongoClient("mongodb://localhost:{}".format(port))
+        self.collection = self.client.get_database("291db").get_collection("dblp")
 
-    def search_articles(self, keywords: list[str]) -> list[dict[str: str, str: str, str: list[str]], str: str, str: str, str: int]:
+    def search_articles(self, keywords: list[str]) -> List[Dict[str: str, str: str, str: List[str], str: str, str: str, str: int]]:
         """
         Returns all articles that have a keyword in the title, authors, abstract, venue or year.
         The return will be a list of dictionaries in the format:
@@ -18,7 +19,7 @@ class DatabaseManager:
         """
         return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
-    def search_authors(self, keyword: str) -> list[list[str, int]]:
+    def search_authors(self, keyword: str) -> List[List[str, int]]:
         """
         Returns all authors whose name includes the provided keyword.
         in form [[<author1>,<publications>],]
@@ -51,14 +52,15 @@ class DatabaseManager:
         """
         return self.collection.find({"id": article_id}, {})[0]
 
-    def articles_by_author(self, author: str) -> list[dict]:
+    def articles_by_author(self, author: str) -> List[dict]:
         """
         title, venue, and year (sorted by year descending)
         """
         return [["Test Paper", "A Big Venue", 2022],["Another Paper", "Smaller Venue", 2017]]
 
     def has_key(self, key: str) -> bool:
-        return len(self.collection.find({"id": key},{})) == 1
+        return False
+        #return len(self.collection.find({"id": key},{})) == 1
 
 class Interface:
 
