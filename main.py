@@ -48,7 +48,7 @@ class DatabaseManager:
 
     def find_article(self, article_id: str) -> dict:
         """
-        return sdictionary containing information of article with provided id.
+        return dictionary containing information of article with provided id.
         """
         return self.collection.find({"id": article_id}, {})[0]
 
@@ -115,7 +115,7 @@ class Interface:
             article = articles[i]
             print("entry {}:".format(i + 1))
             print("id: {}".format(article["id"]))
-            print("title: {}".format(article[i]))
+            print("title: {}".format(article["title"]))
             print("year: {}".format(article["year"]))
             print("venue: {}".format(article["venue"]))
             print("- -" * 5)
