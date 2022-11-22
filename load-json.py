@@ -28,10 +28,6 @@ def main():
         print("Error connecting to database. Exiting...")
         exit()
 
-    # Check if datbase exists
-    if DATABASENAME in client.list_database_names():
-        pass
-
     # check if file exists...
 
     try:
@@ -40,6 +36,7 @@ def main():
         print("Fatal error while trying to import data. Exiting...")
         exit()
 
+    print("Data from {} loaded into database located at port {}.".format(path, port))
 
 if __name__ == "__main__":
     main()
