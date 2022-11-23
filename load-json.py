@@ -7,6 +7,9 @@ from pymongo import MongoClient, TEXT
 # mongo db with port number
 
 def main():
+    """
+    Author: Lane Missel
+    """
     args = sys.argv[1:]
     path = args[0]
     port = None
@@ -46,6 +49,12 @@ def main():
     collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language='none')
 
     print("Data from {} loaded into database located at port {}.".format(path, port))
+
+    # Create indexes
+    collection = client.get_database(DATABASENAME).get_collection(COLLECTIONNAME)
+    collection.create_index("id")
+    #collection.create_index(authors)
+
 
 if __name__ == "__main__":
     main()

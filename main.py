@@ -8,7 +8,7 @@ class DatabaseManager:
         self.client = MongoClient("mongodb://localhost:{}".format(port))
         self.collection = self.client.get_database("291db").get_collection("dblp")
 
-    def search_articles(self, keywords: List[str]):
+    def search_articles(self, keywords: list[str]) -> List[Dict[str: str, str: str, str: List[str], str: str, str: str, str: int]]:
         """
         Returns all articles that have a keyword in the title, authors, abstract, venue or year.
         The return will be a list of dictionaries in the format:
@@ -22,13 +22,15 @@ class DatabaseManager:
         return self.collection.find( {'$text': { '$search': keywords } } )
         #return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
-    def search_authors(self, keyword: str):
+    def search_authors(self, keyword: str) -> List[List[str, int]]:
         """
         Returns all authors whose name includes the provided keyword.
         in form [[<author1>,<publications>],]
         """
         assert(len(keyword) > 0)
         assert(isinstance(keyword, str))
+
+        self.collection.find({"id": "/.*{}.*/i".format(keyword)})
 
         return [["Test Author", 22], ["Another Author", 10]]
 
@@ -41,19 +43,35 @@ class DatabaseManager:
         assert(n > 0)
         assert(isinstance(n, int))
 
-        return [["Test Venue", 4, 16], ["Another Venue", 2, 12]]
+        # aggregate base on venue -- still need to count how many times the venue is indirec;y referenced.
+        result = self.collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]).limit(n)
 
-    def add_article(self, identifier: str, title: str, authors: List[str], year: int):
+        return_list = []        
+        # subquery to get teh reference counts
+        for document in result[:n]:
+            return_list.append(document)
+            result2 = self.collection.aggregate([{"$match": {"references": document["id"]}}, {"$count": "referenceCount"}])
+            document["referenceCount"] = result2[0]["referenceCount"]
+            return_list.append(document)
+
+        return return_list
+
+        #return [["Test Venue", 4, 16], ["Another Venue", 2, 12]]
+
+    def add_article(self, identifier: str, title: str, authors: list[str], year: int):
         """
         Adds an article to the mongo database.
         """
-        return
+        if self.has_key(identifier):
+            raise KeyError
+        
+        self.collection.insert({"id": identifier, "title": title, "authors": authors, "year": year, "abstract": None, "venue": None, "references": [], "n_citations": 0})
 
     def find_article(self, article_id: str) -> dict:
         """
         return dictionary containing information of article with provided id.
         """
-        return self.collection.find({"id": article_id}, {})[0]
+        return self.collection.find({"id": article_id})
 
     def articles_by_author(self, author: str) -> List[dict]:
         """
@@ -62,18 +80,24 @@ class DatabaseManager:
         return [["Test Paper", "A Big Venue", 2022],["Another Paper", "Smaller Venue", 2017]]
 
     def has_key(self, key: str) -> bool:
-        return False
-        #return len(self.collection.find({"id": key},{})) == 1
+        result = self.collection.find({"id": key}) == 1
+        try:
+            return result[0] is not None
+        except Exception:
+            return False
 
 class Interface:
 
-    def __init__(self, database: MongoClient):
+    def __init__(self, database: DatabaseManager):
+        """
+        Author: Lane Missel
+        """
         self.database = database
-        #self.collection = self.database["dblp"]
-        self.collection = database.collection
+        self.collection = self.database["dblp"]
 
     def selection(self):
         """
+        Author: Lane Missel
         Return int repersenting users selection.
         """
         print("[0] Close Program")
@@ -94,6 +118,9 @@ class Interface:
         return -1
 
     def search_for_articles(self):
+        """
+        Author: Lane Missel
+        """
         # prompt for keywords
         keywords = input("Enter keywords: ").strip().split()
 
@@ -167,6 +194,9 @@ class Interface:
         return
 
     def search_for_authors(self):
+        """
+        Author: Lane Missel
+        """
         keyword = input("Enter keyword: ").strip()
 
         if len(keyword) == 0:
@@ -214,6 +244,9 @@ class Interface:
             print("{} - {} - {}".format(entry[0], entry[1], entry[2]))
         
     def list_the_venues(self):
+        """
+        Author: Lane Missel
+        """
         valid_number = False
         while not valid_number:
             try:
@@ -232,11 +265,14 @@ class Interface:
 
         for i in range(len(venues)):
             venue = venues[i]
-            print("{}. {} hosted {} articles and references {}".format(i+1, venue[0], venue[1], venue[2]))
+            print("{}. {} hosted {} articles and references {}".format(i+1, venue["_id"], venue["count"], venue["referenceCount"]))
 
         return
 
     def add_an_article(self):
+        """
+        Author: Lane Missel
+        """
         unique_id = input("Enter id: ")
         
         if self.database.has_key(unique_id):
@@ -264,6 +300,9 @@ class Interface:
         self.database.add_article(unique_id, title, authors, year)
 
     def run(self):
+        """
+        Author: Lane Missel
+        """
         print("Welcome!")
 
         running = True
@@ -294,7 +333,7 @@ class Interface:
                 print("Entry error. Try again...")
 
 if __name__ == '__main__':
-    port = sys.argv[1]
+    port = sys.argv[2]
 
     try:
         port = int(port)
