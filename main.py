@@ -19,7 +19,7 @@ class DatabaseManager:
         """
         #self.collection.createIndex( {id: "text", title: "text", venue: "text", year: "text"} )
         keywords = ' '.join(keywords)
-        return self.collection.find( {'$text': { '$search': keywords } } )
+        return list(self.collection.find( {'$text': { '$search': keywords } } ))
         #return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
     def search_authors(self, keyword: str) -> List[List[str, int]]:
@@ -55,8 +55,6 @@ class DatabaseManager:
             return_list.append(document)
 
         return return_list
-
-        #return [["Test Venue", 4, 16], ["Another Venue", 2, 12]]
 
     def add_article(self, identifier: str, title: str, authors: list[str], year: int):
         """
@@ -130,31 +128,27 @@ class Interface:
 
         articles = self.database.search_articles(keywords)
 
-        #if len(articles) == 0:
-        #    print("No articles found containing keywords: ", end="")
+        if len(articles) == 0:
+            print("No articles found containing keywords: ", end="")
             
-        #    for keyword in keywords:
-        #        print(keyword, end=" ")
+            for keyword in keywords:
+               print(keyword, end=", ")
 
-        #    return
+            return
 
         # display articles (allow user to pick them)...
         print("{} {} {} {} {}".format(" ", "id", "title", "year", "venue"))
         
-        #num_articles = len(articles)
+        num_articles = len(articles)
 
-        count = 0
-        for article in articles:
-            count+=1
-
-        #for i in range(num_articles):
-            #article = articles[i]
-            print(f"entry: {count}")
-            print(f"id: {article['id']}")
-            print(f"title: {article['title']}")
-            print(f"year: {article['year']}")
-            print(f"venue: {article['venue']}")
-            print(f"- -" * 5)
+        for i in range(num_articles):
+            article = articles[i]
+            print("entry: {}".format(i+1))
+            print("id: {}".format(article['id']))
+            print("title: {}".format(article['title']))
+            print("year: {}".format(article['year']))
+            print("venue: {}".format(article['venue']))
+            print("- - " * 5)
 
         valid_choice = False
         while not valid_choice:
