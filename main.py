@@ -8,7 +8,7 @@ class DatabaseManager:
         self.client = MongoClient("mongodb://localhost:{}".format(port))
         self.collection = self.client.get_database("291db").get_collection("dblp")
 
-    def search_articles(self, keywords: List[str]) -> List[Dict[str: str, str: str, str: List[str], str: str, str: str, str: int]]:
+    def search_articles(self, keywords: List[str]):
         """
         Returns all articles that have a keyword in the title, authors, abstract, venue or year.
         The return will be a list of dictionaries in the format:
@@ -19,7 +19,7 @@ class DatabaseManager:
         """
         return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
-    def search_authors(self, keyword: str) -> List[List[str, int]]:
+    def search_authors(self, keyword: str) -> List[list]:
         """
         Returns all authors whose name includes the provided keyword.
         in form [[<author1>,<publications>],]
@@ -28,8 +28,6 @@ class DatabaseManager:
         assert(isinstance(keyword, str))
 
         self.collection.find({"id": "/.*{}.*/i".format(keyword)})
-
-
 
         return [["Test Author", 22], ["Another Author", 10]]
 
