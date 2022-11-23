@@ -1,7 +1,7 @@
 import sys
 import json
 import os
-from pymongo import MongoClient
+from pymongo import MongoClient, TEXT
 # get file
 
 # mongo db with port number
@@ -35,6 +35,15 @@ def main():
     except Exception:
         print("Fatal error while trying to import data. Exiting...")
         exit()
+
+    collection = client.get_database(DATABASENAME).get_collection(COLLECTIONNAME)
+
+    collection.create_index("id")
+    collection.create_index("title")
+    collection.create_index("venue")
+    collection.create_index("year")
+
+    collection.create_index([('title', TEXT), ('authors', TEXT), ('abstract', TEXT), ('venue', TEXT), ('year', TEXT)], default_language='none')
 
     print("Data from {} loaded into database located at port {}.".format(path, port))
 
