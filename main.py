@@ -9,6 +9,7 @@ class DatabaseManager:
         self.collection = self.client.get_database("291db").get_collection("dblp")
 
     def search_articles(self, keywords: list[str]) -> List[Dict[str: str, str: str, str: List[str], str: str, str: str, str: int]]:
+        # Author: Youssef Amer
         """
         Returns all articles that have a keyword in the title, authors, abstract, venue or year.
         The return will be a list of dictionaries in the format:
@@ -23,6 +24,7 @@ class DatabaseManager:
         #return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
     def search_authors(self, keyword: str) -> List[List[str, int]]:
+        # Author: Youssef Amer
         """
         Returns all authors whose name includes the provided keyword.
         in form [[<author1>,<publications>],]
@@ -30,9 +32,12 @@ class DatabaseManager:
         assert(len(keyword) > 0)
         assert(isinstance(keyword, str))
 
-        self.collection.find({"id": "/.*{}.*/i".format(keyword)})
-
-        return [["Test Author", 22], ["Another Author", 10]]
+        #self.collection.find({"id": "/.*{}.*/i".format(keyword)})
+        #authors = self.collection.find( {"author": keyword} )
+        
+        result = self.collection.aggregate( {'$match': { "authors": keyword }, '$group': { '_id': "authors", "publications": {'$count' {} } } } )
+        #return [["Test Author", 22], ["Another Author", 10]]
+        return result
 
     def top_venues(self, n: int):
         """
