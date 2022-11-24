@@ -29,9 +29,9 @@ class DatabaseManager:
         assert(len(keyword) > 0)
         assert(isinstance(keyword, str))
 
-        regex = "." + keyword + "."
+        regex = "(" + keyword + ")"
 
-        result = list(self.collection.aggregate([{"$match": {"authors": {"$elemMatch": {"$regex": regex, "$options": "i"}}}}, {"$unwind": "authors"}, {"$match": {"authors": keyword}}, {"$group": {"_id": "authors", "count": {"$sum": 1}}}]))
+        result = list(self.collection.aggregate([{"$match": {"authors": {"$elemMatch": {"$regex": regex, "$options": "i"}}}}, {"$unwind": "$authors"}, {"$match": {"authors": {"$regex": regex, "$options": "i"}}}, {"$group": {"_id": "$authors", "count": {"$sum": 1}}}, {"$sort": {"_id": -1}}]))
         return result
 
     def top_venues(self, n: int):
