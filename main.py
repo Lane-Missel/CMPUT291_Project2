@@ -8,8 +8,9 @@ class DatabaseManager:
         self.client = MongoClient("mongodb://localhost:{}".format(port))
         self.collection = self.client.get_database("291db").get_collection("dblp")
 
-    def search_articles(self, keywords: list[str]) -> list:
+    def search_articles(self, keywords: list) -> list:
         """
+        Author: Yousseff Amer
         Returns all articles that have a keyword in the title, authors, abstract, venue or year.
         The return will be a list of dictionaries in the format:
             {'id': <str>,
@@ -17,22 +18,19 @@ class DatabaseManager:
             'venue': <str>,
             'year': <int>}
         """
-        #self.collection.createIndex( {id: "text", title: "text", venue: "text", year: "text"} )
-        keywords = ' '.join(keywords)
+        keywords = ' '.join(f'"{word}"' for word in keywords)
         return list(self.collection.find( {'$text': { '$search': keywords } } ))
-        #return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
     def search_authors(self, keyword: str) -> list:
         """
         Returns all authors whose name includes the provided keyword.
-        in form [[<author1>,<publications>],]
+        in form [[<author1>,<publications>],] -> {"_id, "publications"}
         """
         assert(len(keyword) > 0)
         assert(isinstance(keyword, str))
 
-        self.collection.find({"id": "/.*{}.*/i".format(keyword)})
-
-        return [["Test Author", 22], ["Another Author", 10]]
+        result = list(self.collection.aggregate([{"$match": {"authors": keyword}}, {"$group": {"_id": "authors"}}, {"publications": {"$count": {}}}]))
+        return result
 
     def top_venues(self, n: int):
         """
@@ -44,33 +42,37 @@ class DatabaseManager:
         assert(isinstance(n, int))
 
         # aggregate base on venue -- still need to count how many times the venue is indirec;y referenced.
-        result = self.collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]).limit(n)
+        result = list(self.collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": n}]))
 
         return_list = []        
         # subquery to get teh reference counts
         for document in result[:n]:
             return_list.append(document)
-            result2 = self.collection.aggregate([{"$match": {"references": document["id"]}}, {"$count": "referenceCount"}])
-            document["referenceCount"] = result2[0]["referenceCount"]
+            #result2 = self.collection.aggregate([{"$match": {"references": document["id"]}}, {"$count": "referenceCount"}])
+            #document["referenceCount"] = result2[0]["referenceCount"]
+            document["referenceCount"] = 0
             return_list.append(document)
 
         return return_list
 
-    def add_article(self, identifier: str, title: str, authors: list[str], year: int):
+    def add_article(self, identifier: str, title: str, authors: list, year: int):
         """
         Adds an article to the mongo database.
         """
         if self.has_key(identifier):
             raise KeyError
         
-        self.collection.insert({"id": identifier, "title": title, "authors": authors, "year": year, "abstract": None, "venue": None, "references": [], "n_citations": 0})
+        self.collection.insert_one({"id": identifier, "title": title, "authors": authors, "year": year, "abstract": None, "venue": None, "references": [], "n_citations": 0})
 
     def find_article(self, article_id: str) -> dict:
         """
         return dictionary containing information of article with provided id.
         """
-        return self.collection.find({"id": article_id})
-
+        x =  list(self.collection.find({"id": article_id}))
+        if len(x) < 1:
+            raise KeyError("Cannot find article with key: {}".format(article_id)
+        return x[0]
+        
     def articles_by_author(self, author: str) -> List[dict]:
         """
         title, venue, and year (sorted by year descending)
@@ -91,7 +93,6 @@ class Interface:
         Author: Lane Missel
         """
         self.database = database
-        self.collection = self.database["dblp"]
 
     def selection(self):
         """
@@ -110,7 +111,7 @@ class Interface:
         except Exception:
             return -1
 
-        if user_input in range(0,4):
+        if user_input in range(0,5):
             return user_input
 
         return -1
@@ -151,6 +152,7 @@ class Interface:
             print("- - " * 5)
 
         valid_choice = False
+        article_index = None
         while not valid_choice:
             user_input = input("Enter entry number for the artice you would like to choose (or 0 to exit): ")
 
@@ -164,7 +166,7 @@ class Interface:
                 valid_choice = True
 
         article_id = articles[article_index]["id"]
-        article = self.database.find_article(article_id)
+        article = self.database.find_article(article_id)[0]
 
         # Display the choosen article:
         print("Article with id: {}".format(article["id"]))
@@ -207,7 +209,7 @@ class Interface:
         num_authors = len(authors)
         for i in range(num_authors):
             author = authors[i]
-            print("[{}] {} - {} publications".format(i + 1, author[0], author[1]))
+            print("[{}] {} - {} publications".format(i + 1, author["_id"], author["publications"]))
 
         valid_selection = False
         while not valid_selection:
@@ -327,9 +329,8 @@ class Interface:
                 print("Entry error. Try again...")
 
 if __name__ == '__main__':
-    port = sys.argv[2]
-
     try:
+        port = sys.argv[1]
         port = int(port)
     except Exception:
         print("Invalid port number. Exiting...")
