@@ -31,7 +31,7 @@ class DatabaseManager:
 
         regex = "(" + keyword + ")"
 
-        result = list(self.collection.aggregate([{"$match": {"authors": {"$elemMatch": {"$regex": regex, "$options": "i"}}}}, {"$unwind": "$authors"}, {"$match": {"authors": {"$regex": regex, "$options": "i"}}}, {"$group": {"_id": "$authors", "count": {"$sum": 1}}}, {"$sort": {"_id": -1}}]))
+        result = list(self.collection.aggregate([{"$match": {"authors": {"$elemMatch": {"$regex": regex, "$options": "i"}}}}, {"$unwind": "$authors"}, {"$match": {"authors": {"$regex": regex, "$options": "i"}}}, {"$group": {"_id": "$authors", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]))
         return result
 
     def top_venues(self, n: int):
