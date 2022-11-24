@@ -19,7 +19,7 @@ class DatabaseManager:
             'year': <int>}
         """
         #self.collection.createIndex( {id: "text", title: "text", venue: "text", year: "text"} )
-        keywords = ' '.join(keywords)
+        keywords = ' '.join(f'"{word}"' for word in keywords)
         return self.collection.find( {'$text': { '$search': keywords } } )
         #return [{"id": "AAAABBBB", "title": "Test Paper", "venue": "Big Test Venue", "year": 2022}, {"id": "DDDDBBBB", "title": "Another Test Paper", "venue": "Another Test Venue", "year": 2018}]
 
