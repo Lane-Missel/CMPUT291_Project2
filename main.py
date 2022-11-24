@@ -44,7 +44,7 @@ class DatabaseManager:
         assert(isinstance(n, int))
 
         # aggregate base on venue -- still need to count how many times the venue is indirec;y referenced.
-        result = list(self.collection.aggregate([{"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": n}]))
+        result = list(self.collection.aggregate([{"$match": {"venue": {"$ne": ""}}}, {"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": n}]))
 
         return_list = []        
         # subquery to get teh reference counts
