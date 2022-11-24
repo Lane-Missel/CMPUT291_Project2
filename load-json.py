@@ -52,7 +52,7 @@ def main():
 
     # Create indexes
     collection = client.get_database(DATABASENAME).get_collection(COLLECTIONNAME)
-    collection.create_index("id")
+    #collection.create_index("id")
     #collection.create_index(authors)
 
 
