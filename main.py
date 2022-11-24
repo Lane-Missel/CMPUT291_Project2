@@ -70,7 +70,8 @@ class DatabaseManager:
         """
         x =  list(self.collection.find({"id": article_id}))
         if len(x) < 1:
-            raise KeyError("Cannot find article with key: {}".format(article_id)
+            return None
+            #raise KeyError("Cannot find article with key: {}".format(article_id))
         return x[0]
         
     def articles_by_author(self, author: str) -> List[dict]:
@@ -166,7 +167,7 @@ class Interface:
                 valid_choice = True
 
         article_id = articles[article_index]["id"]
-        article = self.database.find_article(article_id)[0]
+        article = self.database.find_article(article_id)
 
         # Display the choosen article:
         print("Article with id: {}".format(article["id"]))
@@ -183,8 +184,13 @@ class Interface:
         for ref_article_id in article["references"]:
             print("Article with id {}:".format(ref_article_id))
             ref_article = self.database.find_article(ref_article_id)
-            print("title: {}".format(ref_article_id))
-            print("year: {}".format(ref_article["year"]))
+            if ref_article is None:
+                print("title: None found.")
+                print("year: na")
+            else:
+                print("title: {}".format(ref_article["title"]))
+                print("year: {}".format(ref_article["year"]))
+                
             print("* *" * 5)
 
         return
