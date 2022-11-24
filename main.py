@@ -78,7 +78,7 @@ class DatabaseManager:
         """
         title, venue, and year (sorted by year descending)
         """
-        x = list(self.collection.find({"authors": author}))
+        x = list(self.collection.aggregate([{"$match": {"authors": author}}, {"$sort": {"year": -1}}]))
         return None if len(x) == 0 else x
 
     def has_key(self, key: str) -> bool:
@@ -251,7 +251,7 @@ class Interface:
             return
 
 
-        for entry in self.database.articles_by_author(authors[author_index]):
+        for entry in articles_by_author:
             print("{:4} | {:40} | {}".format(entry["year"], entry["id"], entry["title"]))
         
     def list_the_venues(self):
