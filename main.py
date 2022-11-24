@@ -78,7 +78,8 @@ class DatabaseManager:
         """
         title, venue, and year (sorted by year descending)
         """
-        return [["Test Paper", "A Big Venue", 2022],["Another Paper", "Smaller Venue", 2017]]
+        x = list(self.collection.find({"authors": author}))
+        return None if len(x) == 0 else x
 
     def has_key(self, key: str) -> bool:
         result = self.collection.find({"id": key}) == 1
@@ -163,7 +164,7 @@ class Interface:
             except Exception:
                 print("Invalid entry. Try again.")
 
-            if article_index in range(num_articles):
+            if article_index in range(-1, num_articles):
                 valid_choice = True
 
         article_id = articles[article_index]["id"]
@@ -179,7 +180,7 @@ class Interface:
         for author in article["authors"]:
             print(author, end=" ")
 
-        print("references:")
+        print("\nreferences:")
 
         for ref_article_id in article["references"]:
             print("Article with id {}:".format(ref_article_id))
@@ -215,14 +216,14 @@ class Interface:
         num_authors = len(authors)
         for i in range(num_authors):
             author = authors[i]
-            print("[{}] {} - {} publications".format(i + 1, author["_id"], author["publications"]))
+            print("[{}] {} - {} publications".format(i + 1, author["_id"], author["count"]))
 
         valid_selection = False
         while not valid_selection:
             selection = input("Selection: ").strip()
 
             if len(selection) == 0:
-                print("No artist selected. Try again.")
+                print("No author selected. Try again.")
                 continue
 
             try:
@@ -243,8 +244,8 @@ class Interface:
             return
 
         # display publications by author
-        for entry in self.database.articles_by_author(authors[author_index][0]):
-            print("{} - {} - {}".format(entry[0], entry[1], entry[2]))
+        for entry in self.database.articles_by_author(authors[author_index]):
+            print("{:4} | {:40} | {}".format(entry["year"], entry["id"], entry["title"]))
         
     def list_the_venues(self):
         """
