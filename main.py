@@ -44,16 +44,17 @@ class DatabaseManager:
         assert(isinstance(n, int))
 
         # aggregate base on venue -- still need to count how many times the venue is indirec;y referenced.
-        result = list(self.collection.aggregate([{"$match": {"venue": {"$ne": ""}}}, {"$group": {"_id": "$venue", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": n}]))
+        result = list(self.collection.aggregate([{"$match": {"venue": {"$ne": ""}}}, {"$group": {"_id": "$venue", "count": {"$sum": 1}, "referenceCount": {"$sum": "n_citations"}}}, {"$sort": {"count": -1}}, {"$limit": n}]))
 
         return_list = []  
         venues = {}      
         # subquery to get teh reference counts
-        for document in result[:n]:
-            document["referenceCount"] = 0
-            venues[document["_id"]] = document
-            return_list.append(document)
+        #for document in result[:n]:
+        #    document["referenceCount"] = 0
+        #    venues[document["_id"]] = document
+        #    return_list.append(document)
 
+        """
         # count if referened:
         total = self.collection.find()
         for document in total:
@@ -71,6 +72,7 @@ class DatabaseManager:
             for key in venues.keys():
                 if x[key] == 1:
                     venues[key]["referenceCount"] += 1
+        """
                 
         return return_list
 
