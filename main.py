@@ -29,7 +29,7 @@ class DatabaseManager:
         assert(len(keyword) > 0)
         assert(isinstance(keyword, str))
 
-        result = list(self.collection.aggregate([{"$match": {"authors": keyword}}, {"$group": {"_id": "authors"}}, {"publications": {"$count": {}}}]))
+        result = list(self.collection.aggregate([{"$match": {"authors": keyword}}, {"$unwind": "$authors"}, {"$match": {"authors": keyword}}, {"$group": {"_id": "$authors", "count": {"$sum": 1}}}]))
         return result
 
     def top_venues(self, n: int):
@@ -227,6 +227,7 @@ class Interface:
 
             try:
                 author_index = int(selection) - 1
+                
             except Exception:
                 print("Invalid selection. Try again.")
                 continue
