@@ -244,6 +244,13 @@ class Interface:
             return
 
         # display publications by author
+        articles_by_author = self.database.articles_by_author(authors[author_index]["_id"])
+
+        if articles_by_author == None:
+            print("No articles by this {}".format(authors))
+            return
+
+
         for entry in self.database.articles_by_author(authors[author_index]):
             print("{:4} | {:40} | {}".format(entry["year"], entry["id"], entry["title"]))
         
